@@ -27,9 +27,9 @@ public class Inventory
      */
     public static void mergeStacks(ItemStack lhs, ItemStack rhs)
     {
-        // lhs needs to have items added to it.
-        // rhs's size is needed
-        // lhs.????(rhs.????)
+        if (lhs.equals(rhs) && lhs.permitsStacking()) {
+            lhs.addItems(rhs.size());
+        }
     }
 
     /**
@@ -94,7 +94,7 @@ public class Inventory
     public boolean isFull()
     {
         // Replace the next line
-        return false;
+        return this.utilizedSlots() >= this.capacity;
     }
 
     /**
@@ -117,7 +117,14 @@ public class Inventory
      */
     public ItemStack findMatchingItemStack(ItemStack key)
     {
-        // Add the necessary sequential search loop
+        LinkedList.Node<ItemStack> current = this.slots.head;
+
+        while (current != null) {
+            if (current.data.equals(key)) {
+                return current.data;
+            }
+            current = current.next;
+        }
 
         return null;
     }
@@ -131,8 +138,16 @@ public class Inventory
     {
         LinkedList.Node<ItemStack> newNode = new LinkedList.Node<>(toAdd);
 
-        // Use the appendNode/add logic from Review 1 as your starting point
-        // Once we reach this function... we know that `toAdd` must be stored
+        if (this.slots.head == null) {
+            this.slots.head = newNode;
+        } else {
+            LinkedList.Node<ItemStack> temp = this.slots.head;
+            while (temp.next != null) {
+                temp = temp.next;
+            }
+            temp.next = newNode;
+        }
+        this.slots.currentSize++;
     }
 
     /**
@@ -146,16 +161,14 @@ public class Inventory
     {
         ItemStack match = this.findMatchingItemStack(stack);
 
-        // if a match was found
         if (match != null) {
-            // If the Item is stackable, add it to the ItemStack
             if (match.permitsStacking()) {
                 mergeStacks(match, stack);
-
                 return true;
             }
         }
-
+    
+        // Check if there's room for a new stack
         if (this.slots.currentSize < capacity) {
             this.addItemStackNoCheck(stack);
             return true;
